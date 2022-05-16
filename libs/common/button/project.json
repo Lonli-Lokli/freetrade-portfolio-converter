@@ -1,0 +1,25 @@
+{
+  "projectType": "library",
+  "sourceRoot": "libs/common/button/src",
+  "prefix": "freetrade",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/common/button"],
+      "options": {
+        "jestConfig": "libs/common/button/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/common/button/**/*.ts",
+          "libs/common/button/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

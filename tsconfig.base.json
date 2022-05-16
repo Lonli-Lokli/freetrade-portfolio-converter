@@ -14,7 +14,12 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@freetrade/common/button": ["libs/common/button/src/index.ts"],
+      "@freetrade/common/drop-file": ["libs/common/drop-file/src/index.ts"],
+      "@freetrade/common/remote-data": ["libs/common/remote-data/src/index.ts"],
+      "@freetrade/report-converter": ["libs/report-converter/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

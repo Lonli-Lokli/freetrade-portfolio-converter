@@ -356,3 +356,6 @@ git.properties
 
 # .NET Global tools
 backend/tools/
+.angular
+
+dist

@@ -1,0 +1,25 @@
+{
+  "projectType": "library",
+  "sourceRoot": "libs/report-converter/src",
+  "prefix": "freetrade",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/report-converter"],
+      "options": {
+        "jestConfig": "libs/report-converter/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/report-converter/**/*.ts",
+          "libs/report-converter/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}
