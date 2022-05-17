@@ -8,17 +8,22 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
     "target": "es2015",
     "module": "esnext",
     "lib": ["es2017", "dom"],
     "skipLibCheck": true,
+    "noImplicitAny": false,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@freetrade/common/button": ["libs/common/button/src/index.ts"],
       "@freetrade/common/drop-file": ["libs/common/drop-file/src/index.ts"],
       "@freetrade/common/remote-data": ["libs/common/remote-data/src/index.ts"],
-      "@freetrade/report-converter": ["libs/report-converter/src/index.ts"]
+      "@freetrade/report-converter": ["libs/report-converter/src/index.ts"],
+      "@freetrade/utils": ["libs/utils/src/index.ts"],
+      "timers": ["node_modules/timers-browserify"],
+      "stream": ["node_modules/stream-browserify"]
     }
   },
   "exclude": ["node_modules", "tmp"]

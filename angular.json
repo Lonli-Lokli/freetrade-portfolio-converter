@@ -2,11 +2,9 @@
   "$schema": "./node_modules/nx/schemas/workspace-schema.json",
   "version": 2,
   "projects": {
-    "common-button": "libs/common/button",
-    "common-drop-file": "libs/common/drop-file",
-    "common-remote-data": "libs/common/remote-data",
     "portfolio": "apps/portfolio",
     "portfolio-e2e": "apps/portfolio-e2e",
-    "report-converter": "libs/report-converter"
+    "report-converter": "libs/report-converter",
+    "utils": "libs/utils"
   }
 }
