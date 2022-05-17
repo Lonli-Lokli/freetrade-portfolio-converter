@@ -220,8 +220,6 @@ sample({
   target: asExportTemplateFx,
 });
 
-asExportTemplateFx.fail.watch((f) => console.log('FAIL', f));
-
 const exportToCsv = createEffect((data: ExportTemplate[]) => {
   saveAs(
     new Blob(
@@ -253,5 +251,10 @@ sample({
   source: asExportTemplateFx.doneData,
   target: exportToCsv,
 });
+
+readFileFx.fail.watch((f) => console.log('readFileFx', f));
+mergeIntoJson.fail.watch((f) => console.log('mergeIntoJson', f));
+asExportTemplateFx.fail.watch((f) => console.log('asExportTemplateFx', f));
+exportToCsv.fail.watch((f) => console.log('exportToCsv', f));
 
 export { processInputFile, asExportTemplateFx, MergedData };
