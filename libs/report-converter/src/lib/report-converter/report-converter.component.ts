@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { processInputFile } from '@freetrade/converters';
 import { NgxFileDropEntry } from 'ngx-file-drop';
-import { processInputFile } from './report-converter.effector';
 
 @Component({
   selector: 'freetrade-report-converter',

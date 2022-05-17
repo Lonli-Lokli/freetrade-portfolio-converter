@@ -176,7 +176,7 @@ const transformSymbol = (row: MergedData): string => {
 };
 const asDate = (input: MergedData) => {
   return dayjs(input['Value Date'], 'DD/MM/YYYY', true).format('YYYY-MM-DD');
-}
+};
 const transformToExportTemplate = (input: MergedData): ExportTemplate => {
   try {
     return {

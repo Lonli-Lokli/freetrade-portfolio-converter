@@ -1,0 +1,25 @@
+{
+  "projectType": "library",
+  "sourceRoot": "libs/converters/src",
+  "prefix": "freetrade",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/converters"],
+      "options": {
+        "jestConfig": "libs/converters/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/converters/**/*.ts",
+          "libs/converters/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

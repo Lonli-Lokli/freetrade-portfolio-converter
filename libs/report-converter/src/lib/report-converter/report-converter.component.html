@@ -5,4 +5,21 @@
   [multiple]="false"
   accept=".csv"
 >
+  <ng-template
+    ngx-file-drop-content-tmp
+    let-openFileSelector="openFileSelector"
+  >
+    <div class="drop-area">
+      <span>Drop files here</span>
+      <span>or</span>
+      <button
+        type="button"
+        class="button"
+        role="button"
+        (click)="openFileSelector()"
+      >
+        Choose File
+      </button>
+    </div>
+  </ng-template>
 </ngx-file-drop>
