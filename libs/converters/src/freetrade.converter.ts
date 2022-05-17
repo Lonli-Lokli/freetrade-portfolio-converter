@@ -4,8 +4,8 @@ import parse from 'csv-parser';
 import { isNotEmptyString, NeverError } from '@freetrade/utils';
 import { unparse } from 'papaparse';
 import saveAs from 'file-saver';
-import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
+import * as dayjs from 'dayjs';
+import * as customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
 
@@ -254,4 +254,4 @@ sample({
   target: exportToCsv,
 });
 
-export { processInputFile };
+export { processInputFile, asExportTemplateFx, MergedData };
