@@ -4,6 +4,10 @@ import parse from 'csv-parser';
 import { isNotEmptyString, NeverError } from '@freetrade/utils';
 import { unparse } from 'papaparse';
 import saveAs from 'file-saver';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 const processInputFile = createEvent<FileSystemFileEntry>();
 
@@ -94,8 +98,14 @@ type ExportTemplate = {
   Quantity: number;
   Currency: string;
   FeeTax: number;
+  Exchange: string;
+  NKD: string;
+  FeeCurrency: string;
+  DoNotAdjustCash: string;
   Error: string;
 };
+
+const toPositive = (input: number) => Math.abs(input);
 
 const transformType = (row: MergedData): EventType => {
   const type = row['Type'];
@@ -118,7 +128,8 @@ const transformPrice = (row: MergedData): number => {
   switch (actionType) {
     case 'Buy':
     case 'Sell':
-      return +row['Value'] / +row['Details'].split(' ')[0];
+      //GBP 5.35914 on
+      return +(row['Details']?.match(/@ GBP (\d*\.\d*) on/)?.[1] ?? 0);
     case 'Cash_In':
     case 'Cash_Out':
     case 'Dividend':
@@ -134,10 +145,11 @@ const transformQuantity = (row: MergedData): number => {
   switch (actionType) {
     case 'Buy':
     case 'Sell':
+      return +row['Details'].split(' ')[0];
     case 'Cash_In':
     case 'Cash_Out':
     case 'Dividend':
-      return +row['Value'];
+      return toPositive(+row['Value']);
     case '':
       return 0;
     default:
@@ -162,17 +174,24 @@ const transformSymbol = (row: MergedData): string => {
       throw new NeverError(actionType);
   }
 };
+const asDate = (input: MergedData) => {
+  return dayjs(input['Value Date'], 'DD/MM/YYYY', true).format('YYYY-MM-DD');
+}
 const transformToExportTemplate = (input: MergedData): ExportTemplate => {
   try {
     return {
       Event: transformType(input),
-      Date: input['Value Date'],
+      Date: asDate(input),
       Currency: input['Currency'],
       FeeTax: 0, // TODO
       Price: transformPrice(input),
       Quantity: transformQuantity(input),
       Symbol: transformSymbol(input),
-      Error: ''
+      Exchange: '',
+      NKD: '',
+      FeeCurrency: '',
+      DoNotAdjustCash: '',
+      Error: '',
     };
   } catch (err: unknown) {
     return {
@@ -183,6 +202,10 @@ const transformToExportTemplate = (input: MergedData): ExportTemplate => {
       Price: 0,
       Quantity: 0,
       Symbol: '',
+      Exchange: '',
+      NKD: '',
+      FeeCurrency: '',
+      DoNotAdjustCash: '',
       Error: err instanceof Error ? err.message : JSON.stringify(err),
     };
   }
@@ -201,7 +224,27 @@ asExportTemplateFx.fail.watch((f) => console.log('FAIL', f));
 
 const exportToCsv = createEffect((data: ExportTemplate[]) => {
   saveAs(
-    new Blob([unparse(data)], { type: 'text/plain;charset=utf-8' }),
+    new Blob(
+      [
+        unparse(data, {
+          columns: [
+            'Event',
+            'Date',
+            'Currency',
+            'FeeTax',
+            'Price',
+            'Quantity',
+            'Symbol',
+            // 'Exchange',
+            // 'NKD',
+            // 'FeeCurrency',
+            // 'DoNotAdjustCash',
+            'Error',
+          ],
+        }),
+      ],
+      { type: 'text/plain;charset=utf-8' }
+    ),
     'freetrade_portfolio.csv'
   );
 });
