@@ -1,0 +1,25 @@
+{
+  "projectType": "library",
+  "sourceRoot": "libs/common/notify/src",
+  "prefix": "freetrade",
+  "targets": {
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/libs/common/notify"],
+      "options": {
+        "jestConfig": "libs/common/notify/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "libs/common/notify/**/*.ts",
+          "libs/common/notify/**/*.html"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

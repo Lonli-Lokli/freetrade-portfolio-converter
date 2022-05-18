@@ -11,6 +11,11 @@ import { NgxFileDropEntry } from 'ngx-file-drop';
 export class ReportConverterComponent{
 
   public dropped(files: NgxFileDropEntry[]) {
-    processInputFile(files[0].fileEntry as FileSystemFileEntry);
+
+    files.forEach(file => {
+      if (file.fileEntry.isFile) {
+        processInputFile(file.fileEntry as FileSystemFileEntry);
+      }
+    });
   }
 }

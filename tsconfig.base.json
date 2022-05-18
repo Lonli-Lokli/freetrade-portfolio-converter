@@ -14,11 +14,13 @@
     "lib": ["es2017", "dom"],
     "skipLibCheck": true,
     "noImplicitAny": false,
+    "noUncheckedIndexedAccess": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@freetrade/common/button": ["libs/common/button/src/index.ts"],
       "@freetrade/common/drop-file": ["libs/common/drop-file/src/index.ts"],
+      "@freetrade/common/notify": ["libs/common/notify/src/index.ts"],
       "@freetrade/common/remote-data": ["libs/common/remote-data/src/index.ts"],
       "@freetrade/converters": ["libs/converters/src/index.ts"],
       "@freetrade/report-converter": ["libs/report-converter/src/index.ts"],

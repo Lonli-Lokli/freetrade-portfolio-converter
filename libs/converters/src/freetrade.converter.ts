@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { createEffect, createEvent, sample } from 'effector';
 import fileReaderStream from 'filereader-stream';
 import parse from 'csv-parser';
@@ -6,55 +7,72 @@ import { unparse } from 'papaparse';
 import saveAs from 'file-saver';
 import * as dayjs from 'dayjs';
 import * as customParseFormat from 'dayjs/plugin/customParseFormat';
+import { showError } from '@freetrade/common/notify';
 
 dayjs.extend(customParseFormat);
 
 const processInputFile = createEvent<FileSystemFileEntry>();
 
+const notifyErrorFx = createEffect((message: string) => {
+  showError(message);
+});
+
 type RowContent = Record<string, { caption: string; value: unknown }>;
 type FileContent = RowContent[];
 const readFileFx = createEffect(
   (entry: FileSystemFileEntry) =>
-    new Promise<any>((resolve) => {
+    new Promise<any>((resolve, reject) => {
       entry.file(async (file) => {
-        let seen = 0;
-        const template: RowContent = {};
-        const results: FileContent = [];
-        fileReaderStream(file)
-          .pipe(
-            parse({
-              skipLines: 1,
-              headers: true,
+        try {
+          let seen = 0;
+          const template: RowContent = {};
+          const results: FileContent = [];
+          fileReaderStream(file)
+            .pipe(
+              parse({
+                skipLines: 1,
+                headers: true,
+              })
+            )
+            .on('data', (row: any) => {
+              if (seen === 0) {
+                seen++;
+                Object.entries<any>(row).reduce<
+                  Record<string, { caption: string; value: unknown }>
+                >((acc, [key, value]) => {
+                  acc[key] = {
+                    caption: value,
+                    value: null,
+                  };
+                  return acc;
+                }, template);
+              } else {
+                results.push(
+                  Object.entries<any>(row).reduce<RowContent>(
+                    (acc, [key, value]) => {
+                      if (acc[key] === undefined) {
+                        throw new Error(
+                          'Cannot process row ' + JSON.stringify(row)
+                        );
+                      }
+                      acc[key] = {
+                        caption: acc[key]!.caption,
+                        value: value,
+                      };
+                      return acc;
+                    },
+                    { ...template }
+                  )
+                );
+              }
             })
-          )
-          .on('data', (row: any) => {
-            if (seen === 0) {
-              seen++;
-              Object.entries<any>(row).reduce<
-                Record<string, { caption: string; value: unknown }>
-              >((acc, [key, value]) => {
-                acc[key] = {
-                  caption: value,
-                  value: null,
-                };
-                return acc;
-              }, template);
-            } else {
-              results.push(
-                Object.entries<any>(row).reduce<RowContent>(
-                  (acc, [key, value]) => {
-                    acc[key] = {
-                      caption: acc[key].caption,
-                      value: value,
-                    };
-                    return acc;
-                  },
-                  { ...template }
-                )
-              );
-            }
+            .on("error", () => {
+              console.log('caught');
           })
-          .on('end', () => resolve(results));
+            .on('end', () => resolve(results));
+        } catch (err: unknown) {
+          reject(err instanceof Error ? err.message : err);
+        }
       });
     })
 );
@@ -145,11 +163,11 @@ const transformQuantity = (row: MergedData): number => {
   switch (actionType) {
     case 'Buy':
     case 'Sell':
-      return +row['Details'].split(' ')[0];
+      return +(getOrThrow(row, 'Details').split(' ')[0] ?? -999);
     case 'Cash_In':
     case 'Cash_Out':
     case 'Dividend':
-      return toPositive(+row['Value']);
+      return toPositive(+getOrThrow(row, 'Value'));
     case '':
       return 0;
     default:
@@ -165,7 +183,7 @@ const transformSymbol = (row: MergedData): string => {
       return row['Details']?.match(/\(([^()]+)\) @ GBP/)?.[1] ?? 'UNKNOWN';
     case 'Cash_In':
     case 'Cash_Out':
-      return row['Currency'];
+      return getOrThrow(row, 'Currency');
     case 'Dividend':
       return row['Details']?.match(/\(([^()]+)\)$/)?.[1] ?? 'UNKNOWN';
     case '':
@@ -175,14 +193,25 @@ const transformSymbol = (row: MergedData): string => {
   }
 };
 const asDate = (input: MergedData) => {
-  return dayjs(input['Value Date'], 'DD/MM/YYYY', true).format('YYYY-MM-DD');
+  return dayjs(getOrThrow(input, 'Value Date'), 'DD/MM/YYYY', true).format(
+    'YYYY-MM-DD'
+  );
 };
+
+const getOrThrow = (input: MergedData, key: string): string => {
+  if (key in input) {
+    return input[key] ?? 'MISSING';
+  }
+
+  throw new Error(`Missing key ${key} in ${JSON.stringify(input)}`);
+};
+
 const transformToExportTemplate = (input: MergedData): ExportTemplate => {
   try {
     return {
       Event: transformType(input),
       Date: asDate(input),
-      Currency: input['Currency'],
+      Currency: getOrThrow(input, 'Currency'),
       FeeTax: 0, // TODO
       Price: transformPrice(input),
       Quantity: transformQuantity(input),
@@ -250,6 +279,17 @@ const exportToCsv = createEffect((data: ExportTemplate[]) => {
 sample({
   source: asExportTemplateFx.doneData,
   target: exportToCsv,
+});
+
+sample({
+  clock: [
+    readFileFx.failData,
+    mergeIntoJson.failData,
+    asExportTemplateFx.failData,
+    exportToCsv.failData,
+  ],
+  fn: (_) => _.message,
+  target: notifyErrorFx,
 });
 
 readFileFx.fail.watch((f) => console.log('readFileFx', f));
