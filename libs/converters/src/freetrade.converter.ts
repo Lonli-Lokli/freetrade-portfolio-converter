@@ -2,7 +2,7 @@
 import { createEffect, createEvent, sample } from 'effector';
 import fileReaderStream from 'filereader-stream';
 import parse from 'csv-parser';
-import { isNotEmptyString, NeverError } from '@freetrade/utils';
+import { excludeProp, NeverError } from '@freetrade/utils';
 import { unparse } from 'papaparse';
 import saveAs from 'file-saver';
 import * as dayjs from 'dayjs';
@@ -17,58 +17,26 @@ const notifyErrorFx = createEffect((message: string) => {
   showError(message);
 });
 
-type RowContent = Record<string, { caption: string; value: unknown }>;
+type RowContent = Record<string, unknown>;
 type FileContent = RowContent[];
 const readFileFx = createEffect(
   (entry: FileSystemFileEntry) =>
     new Promise<any>((resolve, reject) => {
       entry.file(async (file) => {
         try {
-          let seen = 0;
-          const template: RowContent = {};
           const results: FileContent = [];
           fileReaderStream(file)
             .pipe(
               parse({
                 skipLines: 1,
-                headers: true,
               })
             )
             .on('data', (row: any) => {
-              if (seen === 0) {
-                seen++;
-                Object.entries<any>(row).reduce<
-                  Record<string, { caption: string; value: unknown }>
-                >((acc, [key, value]) => {
-                  acc[key] = {
-                    caption: value,
-                    value: null,
-                  };
-                  return acc;
-                }, template);
-              } else {
-                results.push(
-                  Object.entries<any>(row).reduce<RowContent>(
-                    (acc, [key, value]) => {
-                      if (acc[key] === undefined) {
-                        throw new Error(
-                          'Cannot process row ' + JSON.stringify(row)
-                        );
-                      }
-                      acc[key] = {
-                        caption: acc[key]!.caption,
-                        value: value,
-                      };
-                      return acc;
-                    },
-                    { ...template }
-                  )
-                );
-              }
+              results.push(excludeProp(row, ''));
             })
-            .on("error", () => {
-              console.log('caught');
-          })
+            .on('error', (ee: any) => {
+              console.log('caught', ee);
+            })
             .on('end', () => resolve(results));
         } catch (err: unknown) {
           reject(err instanceof Error ? err.message : err);
@@ -80,19 +48,7 @@ const readFileFx = createEffect(
 type MergedData = Record<string, string> & { RAW: string };
 const mergeIntoJson = createEffect((rawData: FileContent) =>
   rawData.reduce<MergedData[]>((acc, curr) => {
-    acc.push(
-      Object.values(curr)
-        .filter((v) => isNotEmptyString(v.caption))
-        .reduce(
-          (item, details) => {
-            item[details.caption] = details.value;
-            return item;
-          },
-          {
-            RAW: JSON.stringify(curr),
-          }
-        )
-    );
+    acc.push({ ...curr, RAW: JSON.stringify(curr) });
     return acc;
   }, [])
 );
