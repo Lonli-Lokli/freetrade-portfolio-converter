@@ -9,6 +9,20 @@
     ngx-file-drop-content-tmp
     let-openFileSelector="openFileSelector"
   >
+    <div class="options-container">
+      <div class="options-box" *ngFor="let option of options">
+        <input
+          type="radio"
+          id="{{ option.optionId }}"
+          name="radio"
+          [(ngModel)]="selectedOption"
+          value="{{ option.optionId }}"
+        />
+        <label for="{{ option.optionId }}"
+          ><span class="que">{{ option.text }}</span></label
+        >
+      </div>
+    </div>
     <div class="drop-area">
       <span>Drop files here</span>
       <span>or</span>

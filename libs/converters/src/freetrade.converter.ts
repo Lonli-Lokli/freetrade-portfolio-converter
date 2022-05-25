@@ -11,16 +11,16 @@ import { showError } from '@freetrade/common/notify';
 
 dayjs.extend(customParseFormat);
 
-const processInputFile = createEvent<FileSystemFileEntry>();
+const processInputFile = createEvent<{entry: FileSystemFileEntry, reportType: ReportType}>();
 
 const notifyErrorFx = createEffect((message: string) => {
   showError(message);
 });
 
 type RowContent = Record<string, unknown>;
+type ReportType = 'ISA' | 'GIA';
 type FileContent = RowContent[];
-const readFileFx = createEffect(
-  (entry: FileSystemFileEntry) =>
+const readFileFx = createEffect(({entry, reportType}: {entry: FileSystemFileEntry, reportType: ReportType}) =>
     new Promise<any>((resolve, reject) => {
       entry.file(async (file) => {
         try {
@@ -28,7 +28,7 @@ const readFileFx = createEffect(
           fileReaderStream(file)
             .pipe(
               parse({
-                skipLines: 1,
+                skipLines: reportType === 'ISA' ? 1 : 2,
               })
             )
             .on('data', (row: any) => {
@@ -92,6 +92,8 @@ const transformType = (row: MergedData): EventType => {
       return 'Dividend';
     case 'DEPOSIT':
       return 'Cash_In';
+    case 'WITHDRAWAL':
+      return 'Cash_Out';
     default:
       throw new Error(JSON.stringify(row));
   }
